@@ -1,16 +1,19 @@
-#include<iostream>
-using namespace std;
+class A{
+    private:
+        int a_ka_private;  // can't accessed and inherited 
+    protected:
+        int a_ka_protected; // inherited but bot accessed 
+    public:
+        int a_ka_public;  // inherited as well as accessed 
+};
 
-int sumParamaterised(int sum,int n){ // we are using extra variable to print the number
-    if(n==0)
-        return sum;
-    sum = sum + n;
-    int val = sumParamaterised(sum, n - 1);
+
+class B: private A{  // a se jo bhi aayeha bo protected rhega
+    public:
+        int b_ka_public;
     
-}
-
-int main(){
-    int n = 6;
-    int val = sumParamaterised(0,n);
-    cout << val;
-}
+    void show(){
+        //  a_ka_private;
+        
+    }
+};
