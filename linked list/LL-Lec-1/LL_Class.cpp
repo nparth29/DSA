@@ -1,7 +1,7 @@
 #include<iostream>
 using namespace std;
 
-class Node{
+class Node{    // user define data type
 public:
     int val;
     Node* next;
@@ -13,7 +13,7 @@ public:
 };
 
 
-class LinkedList{
+class LinkedList{       // LinkedList class to implement a singly linked list ( user defined data structure )
     public:
         Node *head;
         Node *tail;
