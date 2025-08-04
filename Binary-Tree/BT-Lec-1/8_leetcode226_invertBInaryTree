@@ -1,0 +1,205 @@
+#include <iostream>
+#include <queue> // Needed for printing the tree level-by-level
+
+using namespace std;
+
+// Definition for a binary tree node.
+class TreeNode {
+public:
+    int val;
+    TreeNode *left;
+    TreeNode *right;
+    TreeNode(int val) {
+        this->val = val;
+        this->left = NULL;
+        this->right = NULL;
+    }
+};
+
+// Solution class containing the invertTree method
+class Solution {
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        // Base Case: If the node is null, we're done with this path.
+        if (root == NULL) {
+            return NULL;
+        }
+
+        // Recursively invert the children first.
+        invertTree(root->left);
+        invertTree(root->right);
+
+        // Swap the left and right pointers of the current node.
+        TreeNode* temp = root->left;
+        root->left = root->right;
+        root->right = temp;
+
+        return root;
+    }
+};
+
+// Helper function to print the tree level by level to verify the result
+void printTree(TreeNode* root) {
+    if (root == NULL) {
+        cout << "[Empty Tree]" << endl;
+        return;
+    }
+    queue<TreeNode*> q;
+    q.push(root);
+    while (!q.empty()) {
+        TreeNode* current = q.front();
+        q.pop();
+        if (current == NULL) {
+            cout << "[null] ";
+            continue;
+        }
+        cout << current->val << " ";
+        q.push(current->left);
+        q.push(current->right);
+    }
+    cout << endl;
+}
+
+// main function to build the tree and run the solution
+int main() {
+    // Build the tree: 1 2 4 5 3 6 7
+    TreeNode* root = new TreeNode(1);
+    root->left = new TreeNode(2);
+    root->right = new TreeNode(3);
+    root->left->left = new TreeNode(4);
+    root->left->right = new TreeNode(5);
+    root->right->left = new TreeNode(6);
+    root->right->right = new TreeNode(7);
+
+    cout << "Original Tree (Level Order): ";
+    printTree(root);
+
+    // Create an instance of the Solution class
+    Solution sol;
+
+    // Invert the tree
+    root = sol.invertTree(root);
+
+    cout << "Inverted Tree (Level Order): ";
+    printTree(root);
+
+    return 0;
+}
+
+/*
+================================================================================
+  In-Depth Dry Run for invertTree on the tree: 1 2 4 5 3 6 7
+================================================================================
+
+The "funda" is that a parent node only swaps its children *after* the function 
+has finished running on both of them. This means the swaps start at the bottom 
+of the tree and work their way up.
+
+### The Sample Tree
+
+The pre-order traversal `1 2 4 5 3 6 7` gives us this tree:
+
+    // Initial State
+        1
+       / \
+      2   3
+     / \ / \
+    4  5 6  7
+
+---
+### Step 1: The Descent
+
+The function is first called on the root, **Node 1**. It immediately calls the 
+function on its left child, **Node 2**, which in turn calls the function on 
+its left child, **Node 4**. The program goes all the way down the leftmost 
+path before any swaps happen.
+
+Call Stack (The To-Do List):
+-----------------------------
+invertTree(4)  <-- Current Task
+invertTree(2)
+invertTree(1)
+-----------------------------
+
+---
+### Step 2: Inverting the Leaves
+
+- At Node 4 (a leaf): `invertTree(4)` is called. It tries to call `invertTree` 
+  on its left and right children (both `NULL`). These calls return immediately. 
+  Then, Node 4 swaps its `NULL` children (which does nothing). It returns to 
+  its caller, Node 2.
+
+- Back at Node 2: The call for Node 4 is done. Now `invertTree(2)` calls the 
+  function on its right child, **Node 5**.
+
+- At Node 5 (a leaf): The same thing happens. It swaps its `NULL` children 
+  and returns to Node 2.
+
+---
+### Step 3: Inverting the First Subtree (at Node 2)
+
+- Back at Node 2: `invertTree(2)` has now finished the recursive calls for 
+  both its children (Node 4 and Node 5). Now it can perform its own swap.
+
+- Action: It swaps its left and right pointers.
+  - Before: `2->left` was `Node 4`, `2->right` was `Node 5`.
+  - After: `2->left` is now `Node 5`, `2->right` is now `Node 4`.
+
+- The function call for Node 2 is finished, and it returns to its caller, Node 1.
+
+Tree's Current State:
+----------------------
+The subtree rooted at 2 is now inverted.
+        1
+       / \
+      2   3  <-- Subtree at 2 is inverted
+     / \ / \
+    5  4 6  7
+----------------------
+
+---
+### Step 4: Processing the Right Side (Node 3)
+
+- Back at Node 1: The call for the entire left side is done. The function 
+  now moves to the right side, calling `invertTree(3)`.
+
+- This process repeats: `invertTree(3)` calls `invertTree(6)` (which returns) 
+  and `invertTree(7)` (which also returns).
+
+- Back at Node 3: `invertTree(3)` has finished with its children. Now it swaps them.
+  - Before: `3->left` was `Node 6`, `3->right` was `Node 7`.
+  - After: `3->left` is now `Node 7`, `3->right` is now `Node 6`.
+
+- The subtree at Node 3 is now inverted, and the function returns to Node 1.
+
+Tree's Current State:
+----------------------
+Both subtrees are now individually inverted.
+        1
+       / \
+      2   3  <-- Both subtrees inverted
+     / \ / \
+    5  4 7  6
+----------------------
+
+---
+### Step 5: The Final Swap (at the Root)
+
+- Back at Node 1: `invertTree(1)` has now finished the recursive calls for 
+  both its left child (Node 2) and its right child (Node 3).
+
+- Action: It performs the final swap.
+  - Before: `1->left` was `Node 2`, `1->right` was `Node 3`.
+  - After: `1->left` is now `Node 3`, `1->right` is now `Node 2`.
+
+The function call is complete.
+
+### Final Result
+
+The entire tree has been successfully inverted.
+        1
+       / \
+      3   2
+     / \ / \
+    7  6 5  4
+*/
