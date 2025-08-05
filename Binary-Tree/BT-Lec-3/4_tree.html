@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binary Tree Visualizer</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 10;
+        }
+        #svg-container {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        .node circle {
+            fill: #2c3e50;
+            stroke: #3498db;
+            stroke-width: 2px;
+            transition: fill 0.2s;
+        }
+        .node text {
+            fill: #ecf0f1;
+            font-size: 12px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+        .node:hover circle {
+            fill: #3498db;
+        }
+        .link {
+            stroke: #4a4a4a;
+            stroke-width: 1.5px;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="info">
+        <strong>Controls:</strong><br>
+        - Drag to Pan<br>
+        - Scroll to Zoom
+    </div>
+    <svg id="svg-container"></svg>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // The array representing the tree in level-order
+            const arr = [1, 2, 3, 4, 5, -1, 6, 7, -1, 8, -1, 9, 10, -1, 11, -1, 12, -1, 13, -1, 14, 15, 16, -1, 17, -1, -1, 18, -1, 19, -1, -1, -1, 20, 21, 22, 23, -1, 24, 25, 26, 27, -1, 28, -1];
+
+            // --- 1. Build the tree data structure from the array ---
+            function buildTree(arr) {
+                if (!arr.length || arr[0] === -1) return null;
+                const root = { val: arr[0], left: null, right: null, level: 0 };
+                const q = [root];
+                let i = 1;
+                while (q.length > 0 && i < arr.length) {
+                    const parent = q.shift();
+                    // Left child
+                    if (arr[i] !== -1) {
+                        const leftChild = { val: arr[i], left: null, right: null, level: parent.level + 1 };
+                        parent.left = leftChild;
+                        q.push(leftChild);
+                    }
+                    i++;
+                    // Right child
+                    if (i < arr.length && arr[i] !== -1) {
+                        const rightChild = { val: arr[i], left: null, right: null, level: parent.level + 1 };
+                        parent.right = rightChild;
+                        q.push(rightChild);
+                    }
+                    i++;
+                }
+                return root;
+            }
+
+            // --- 2. Calculate node positions using in-order traversal for X ---
+            let x_pos = 0;
+            const X_SPACING = 50;
+            const Y_SPACING = 70;
+            
+            function setPositions(node) {
+                if (!node) return;
+                setPositions(node.left);
+                node.x = x_pos * X_SPACING;
+                node.y = node.level * Y_SPACING;
+                x_pos++;
+                setPositions(node.right);
+            }
+
+            const treeRoot = buildTree(arr);
+            setPositions(treeRoot);
+
+            // --- 3. Render the tree as SVG elements ---
+            const svg = document.getElementById('svg-container');
+            const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            svg.appendChild(g);
+
+            const linksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            const nodesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+            g.appendChild(linksGroup);
+            g.appendChild(nodesGroup);
+
+            function renderTree(node) {
+                if (!node) return;
+                
+                const R = 18; // Node radius
+
+                // Draw links (lines) first so they appear behind nodes
+                if (node.left) {
+                    const link = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    link.setAttribute('x1', node.x);
+                    link.setAttribute('y1', node.y);
+                    link.setAttribute('x2', node.left.x);
+                    link.setAttribute('y2', node.left.y);
+                    link.setAttribute('class', 'link');
+                    linksGroup.appendChild(link);
+                }
+                if (node.right) {
+                    const link = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    link.setAttribute('x1', node.x);
+                    link.setAttribute('y1', node.y);
+                    link.setAttribute('x2', node.right.x);
+                    link.setAttribute('y2', node.right.y);
+                    link.setAttribute('class', 'link');
+                    linksGroup.appendChild(link);
+                }
+
+                // Draw node group (circle + text)
+                const nodeG = document.createElementNS("http://www.w3.org/2000/svg", "g");
+                nodeG.setAttribute('class', 'node');
+                nodeG.setAttribute('transform', `translate(${node.x}, ${node.y})`);
+                
+                const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                circle.setAttribute('r', R);
+                
+                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                text.textContent = node.val;
+                
+                nodeG.appendChild(circle);
+                nodeG.appendChild(text);
+                nodesGroup.appendChild(nodeG);
+                
+                // Recurse for children
+                renderTree(node.left);
+                renderTree(node.right);
+            }
+
+            renderTree(treeRoot);
+
+            // --- 4. Pan and Zoom functionality ---
+            let pan = { x: 0, y: 0 };
+            let zoom = 1;
+            let isPanning = false;
+            let startPoint = { x: 0, y: 0 };
+
+            const BBox = g.getBBox();
+            pan.x = (svg.clientWidth / 2) - (BBox.x + BBox.width / 2);
+            pan.y = 50; // Initial top padding
+            updateTransform();
+
+            svg.addEventListener('mousedown', (e) => {
+                isPanning = true;
+                svg.style.cursor = 'grabbing';
+                startPoint = { x: e.clientX, y: e.clientY };
+            });
+
+            svg.addEventListener('mousemove', (e) => {
+                if (!isPanning) return;
+                const dx = e.clientX - startPoint.x;
+                const dy = e.clientY - startPoint.y;
+                pan.x += dx;
+                pan.y += dy;
+                startPoint = { x: e.clientX, y: e.clientY };
+                updateTransform();
+            });
+
+            svg.addEventListener('mouseup', () => {
+                isPanning = false;
+                svg.style.cursor = 'grab';
+            });
+            
+            svg.addEventListener('mouseleave', () => {
+                isPanning = false;
+                svg.style.cursor = 'grab';
+            });
+
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const zoomFactor = 1.1;
+                const oldZoom = zoom;
+                
+                if (e.deltaY < 0) { // Zoom in
+                    zoom *= zoomFactor;
+                } else { // Zoom out
+                    zoom /= zoomFactor;
+                }
+                zoom = Math.max(0.1, Math.min(zoom, 10)); // Clamp zoom
+
+                const mouseX = e.clientX - svg.getBoundingClientRect().left;
+                const mouseY = e.clientY - svg.getBoundingClientRect().top;
+                
+                pan.x = mouseX - (mouseX - pan.x) * (zoom / oldZoom);
+                pan.y = mouseY - (mouseY - pan.y) * (zoom / oldZoom);
+
+                updateTransform();
+            });
+
+            function updateTransform() {
+                g.setAttribute('transform', `translate(${pan.x}, ${pan.y}) scale(${zoom})`);
+            }
+        });
+    </script>
+</body>
+</html>
