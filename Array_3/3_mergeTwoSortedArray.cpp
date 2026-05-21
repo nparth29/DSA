@@ -31,7 +31,6 @@ vector<int> merge(vector<int>arr1, vector<int>arr2){
         }
         k++; // k++ is common for both loop so we put it here
     }
-    // if n is greater then i =m-1; or m is greater then j =n-1;
     // for remaining element 
         while(j<m){
             arr[k] = arr2[j];

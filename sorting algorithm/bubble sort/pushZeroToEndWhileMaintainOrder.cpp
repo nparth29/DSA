@@ -1,3 +1,5 @@
+// Push all the zeroes to end of array while maintaining the order of non-zero elements
+// input : {5,0,1,2,0,0,4,0,3} --> output : {5,1,2,4,3,0,0,0,0}
 #include<iostream>
 #include<vector>
 using namespace std;
