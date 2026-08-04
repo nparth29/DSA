@@ -37,7 +37,7 @@ public:
 int main() {
     Bike b1;                 // Calls Default Constructor
     Bike b2("Yamaha");       // Calls 1-Parameter Constructor
-    Bike b3("Honda", 180);   // Calls 2-Parameter Constructor
+    Bike b3("Honda", `180);   // Calls 2-Parameter Constructor
 
     cout << "\nBike Details:" << endl;
     b1.display();
